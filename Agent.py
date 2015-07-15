@@ -52,48 +52,30 @@ class Agent:
         # print "problem name: " + problem.name
         # print "problem type: " + problem.problemType
         problem_figures={}
-        transforms={}
-        if problem.name == 'Basic Problem D-01':
 
-            for figureName in problem.figures:
+        for figureName in problem.figures:
 
-                figure = problem.figures[figureName]
-                image = Image.open(figure.visualFilename).convert('1')
-                #
-                #problem_figures[figureName] = ImageOps.invert(image).filter(ImageFilter.GaussianBlur(2))
-                problem_figures[figureName] = image
+            figure = problem.figures[figureName]
+            image = Image.open(figure.visualFilename).convert('1')
+            #
+            #problem_figures[figureName] = ImageOps.invert(image).filter(ImageFilter.GaussianBlur(2))
+            problem_figures[figureName] = image
 
-            #     # problem_figures[figureName].show()
-            # print(problem_figures)
-            # print("a==b", self.rmsdiff(problem_figures['A'], problem_figures['B']))
-            im1= problem_figures['A']
-            im2= problem_figures['B']
-
-            pixA= im1.load()
-            pixB= im1.load()
-            print pixA
-
-            # ImageChops.difference(problem_figures['A'], problem_figures['B'] ).show()
-            # out =ImageChops.multiply(problem_figures['A'].offset(1, 0), im2.offset(1, 0))
-            # print ImageChops.subtract(problem_figures['A'], problem_figures['B'] ).histogram()
-            # print  ImageChops.subtract(problem_figures['A'], problem_figures['B'] ).histogram()
-            # ImageChops.subtract(problem_figures['A'], problem_figures['B'], 0,3 ).show()
-            # ImageChops.screen(problem_figures['A'], problem_figures['B']).show()
-            # print ImageMath.imagemath_equal(problem_figures['A'], problem_figures['B'])
-            # print im2.getextrema()
-            # print im1.histogram()
-            # print im1.histogram(im2.offset(1, 0))
-            # print out.show()
-            # pairs = izip(im1.getdata(), im2.getdata())
-            # if len(im1.getbands()) == 1:
-            #     # for gray-scale jpegs
+        #     # problem_figures[figureName].show()
+        # print(problem_figures)
+        # print("a==b", self.rmsdiff(problem_figures['A'], problem_figures['B']))
 
 
+        if self.chooseStrategy(problem_figures)=='row equals':
+           print self.chooseStrategy(problem_figures)
+           for i in range(1, 9):
+               print self.areEqual(problem_figures['H'], problem_figures[str(i)])
+               if self.areEqual(problem_figures['H'], problem_figures[str(i)]):
+                    print "comparing H nad "+ str(i), self.areEqual(problem_figures['H'], problem_figures[str(i)])
+                    return int(i)
 
 
-
-
-        return 1
+        return -1
 
     def areEqual(self, im1, im2):
         dif = sum(abs(p1-p2) for p1,p2 in zip(im1.getdata(), im2.getdata()))
@@ -108,6 +90,9 @@ class Agent:
           #   print im2.histogram(im1)
           #   print im2.histogram()
           #
+        # print dist<1.0
+        # print black==black1
+        # print white==white1
         return (dist<1.0 and black==black1 and white==white1)
 
     def chooseStrategy(self, figures):
