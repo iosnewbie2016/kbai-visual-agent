@@ -9,7 +9,10 @@
 # These methods will be necessary for the project's main method to run.
 
 # Install Pillow and uncomment this line to access image processing.
-#from PIL import Image
+from PIL import Image, ImageChops, ImageMath,ImageOps, ImageStat, ImageFilter
+import math, operator
+from itertools import izip
+
 
 class Agent:
     # The default constructor for your Agent. Make sure to execute any
@@ -44,4 +47,85 @@ class Agent:
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
     def Solve(self,problem):
-        return -1
+
+        #
+        # print "problem name: " + problem.name
+        # print "problem type: " + problem.problemType
+        problem_figures={}
+        transforms={}
+        if problem.name == 'Basic Problem D-01':
+
+            for figureName in problem.figures:
+
+                figure = problem.figures[figureName]
+                image = Image.open(figure.visualFilename).convert('1')
+                #
+                #problem_figures[figureName] = ImageOps.invert(image).filter(ImageFilter.GaussianBlur(2))
+                problem_figures[figureName] = image
+
+            #     # problem_figures[figureName].show()
+            # print(problem_figures)
+            # print("a==b", self.rmsdiff(problem_figures['A'], problem_figures['B']))
+            im1= problem_figures['A']
+            im2= problem_figures['B']
+
+            pixA= im1.load()
+            pixB= im1.load()
+            print pixA
+
+            # ImageChops.difference(problem_figures['A'], problem_figures['B'] ).show()
+            # out =ImageChops.multiply(problem_figures['A'].offset(1, 0), im2.offset(1, 0))
+            # print ImageChops.subtract(problem_figures['A'], problem_figures['B'] ).histogram()
+            # print  ImageChops.subtract(problem_figures['A'], problem_figures['B'] ).histogram()
+            # ImageChops.subtract(problem_figures['A'], problem_figures['B'], 0,3 ).show()
+            # ImageChops.screen(problem_figures['A'], problem_figures['B']).show()
+            # print ImageMath.imagemath_equal(problem_figures['A'], problem_figures['B'])
+            # print im2.getextrema()
+            # print im1.histogram()
+            # print im1.histogram(im2.offset(1, 0))
+            # print out.show()
+            # pairs = izip(im1.getdata(), im2.getdata())
+            # if len(im1.getbands()) == 1:
+            #     # for gray-scale jpegs
+
+
+
+
+
+
+        return 1
+
+    def areEqual(self, im1, im2):
+        dif = sum(abs(p1-p2) for p1,p2 in zip(im1.getdata(), im2.getdata()))
+        ncomponents = im1.size[0] * im1.size[1] * 3
+        dist =(dif / 255.0 * 100) / ncomponents
+
+        black, white = im1.getcolors()
+        black1, white1 = im2.getcolors()
+          # print black[0],  black1[0]
+          #   print white[0], white1[0]
+          #   print im1.histogram(im2)
+          #   print im2.histogram(im1)
+          #   print im2.histogram()
+          #
+        return (dist<1.0 and black==black1 and white==white1)
+
+    def chooseStrategy(self, figures):
+        # everyone is the same
+        if self.areEqual(figures['A'], figures['B']) and self.areEqual(figures['B'], figures['C']):
+            if self.areEqual(figures['D'], figures['E']) and self.areEqual(figures['E'], figures['F']):
+                return 'row equals'
+
+
+
+
+
+#     from itertools import izip
+# import Image
+#
+# i1 = Image.open("image1.jpg")
+# i2 = Image.open("image2.jpg")
+# assert i1.mode == i2.mode, "Different kinds of images."
+# assert i1.size == i2.size, "Different sizes."
+#
+#
