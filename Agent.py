@@ -49,68 +49,94 @@ class Agent:
     def Solve(self,problem):
 
         #
-        # print "problem name: " + problem.name
+        print "problem name: " + problem.name
         # print "problem type: " + problem.problemType
         problem_figures={}
+
+        STRATEGIES=[]
 
         for figureName in problem.figures:
 
             figure = problem.figures[figureName]
             image = Image.open(figure.visualFilename).convert('1')
-            #
-            #problem_figures[figureName] = ImageOps.invert(image).filter(ImageFilter.GaussianBlur(2))
+
             problem_figures[figureName] = image
-
-        #     # problem_figures[figureName].show()
-        # print(problem_figures)
-        # print("a==b", self.rmsdiff(problem_figures['A'], problem_figures['B']))
-
-
-        if self.chooseStrategy(problem_figures)=='row equals':
-           print self.chooseStrategy(problem_figures)
+        print self.chooseStrategy(problem_figures)
+        if self.chooseStrategy(problem_figures)=='row_equals':
            for i in range(1, 9):
-               print self.areEqual(problem_figures['H'], problem_figures[str(i)])
                if self.areEqual(problem_figures['H'], problem_figures[str(i)]):
-                    print "comparing H nad "+ str(i), self.areEqual(problem_figures['H'], problem_figures[str(i)])
                     return int(i)
+        elif self.chooseStrategy(problem_figures)=='one_of_each':
+            self.applyOnfOfEachStrategy(problem_figures)
 
-
+        print ("dunno why?")
         return -1
 
-    def areEqual(self, im1, im2):
+    @staticmethod
+    def areEqual(im1, im2):
         dif = sum(abs(p1-p2) for p1,p2 in zip(im1.getdata(), im2.getdata()))
         ncomponents = im1.size[0] * im1.size[1] * 3
         dist =(dif / 255.0 * 100) / ncomponents
+        im1__getcolors = im1.getcolors()
+        im2_getcolors = im2.getcolors()
+        if  len(im1__getcolors)>1  and  len(im2_getcolors)>1:
+            black, white = im1__getcolors
+            black1, white1 = im2_getcolors
+        else:
+            if im1__getcolors[0][1]==255:
+                white =im1__getcolors
+            else:
+                black=im1__getcolors
 
-        black, white = im1.getcolors()
-        black1, white1 = im2.getcolors()
-          # print black[0],  black1[0]
-          #   print white[0], white1[0]
-          #   print im1.histogram(im2)
-          #   print im2.histogram(im1)
-          #   print im2.histogram()
-          #
-        # print dist<1.0
-        # print black==black1
-        # print white==white1
-        return (dist<1.0 and black==black1 and white==white1)
+            if im2_getcolors[0][1]==255:
+                white1 =im2_getcolors
+            else:
+                black1=im2_getcolors
+
+
+            # print black[0],  black1[0]
+            # print white[0], white1[0]
+            #
+            # print dist
+            # print black==black1
+            # print white==white1
+        return (dist<1.1 and abs(black[0]-black1[0])<100 and abs(white[0]-white1[0]<100))
 
     def chooseStrategy(self, figures):
         # everyone is the same
-        if self.areEqual(figures['A'], figures['B']) and self.areEqual(figures['B'], figures['C']):
-            if self.areEqual(figures['D'], figures['E']) and self.areEqual(figures['E'], figures['F']):
-                return 'row equals'
+        figures_a_ = figures['A']
+        figures_b_ = figures['B']
+        figures_c_ = figures['C']
+        figures_d_ = figures['D']
+        figures_e_ = figures['E']
+        figures_f_ = figures['F']
+        if self.areEqual(figures_a_, figures_b_) and self.areEqual(figures_b_, figures_c_):
+            if self.areEqual(figures_d_, figures_e_) and self.areEqual(figures_e_, figures_f_):
+                return 'row_equals'
+        elif self.areEqual(figures_a_, figures_d_) or self.areEqual(figures_a_, figures_e_) or self.areEqual(figures_a_, figures_f_):
+            if self.areEqual(figures_b_, figures_d_) or self.areEqual(figures_b_, figures_e_) or self.areEqual(figures_b_, figures_f_):
+                return 'one_of_each'
 
 
+    def applyOnfOfEachStrategy(self, problem_figures):
+        if self.areEqual(problem_figures['A'], problem_figures['G']) or self.areEqual(problem_figures['A'], problem_figures['H']):
+            if self.areEqual(problem_figures['B'], problem_figures['G']) or self.areEqual(problem_figures['B'], problem_figures['H']):
+                if self.areEqual(problem_figures['C'], problem_figures['G']) or self.areEqual(problem_figures['C'], problem_figures['H']):
+                    print  "need to chose another strategy"
+                else:
+                    print "missing C"
+                    missing_figure= problem_figures['C']
+            else:
+                print "missing B"
+                missing_figure= problem_figures['B']
+        else:
+            missing_figure= problem_figures['A']
+            print "missing A"
+            print "comp", self.areEqual(problem_figures['A'], problem_figures['1'])
+        for i in range(1, 9):
+            print 'A &', i
+            if self.areEqual(missing_figure, problem_figures[str(i)]):
+                print ("found answer", i)
+                problem_figures[str(i)].show()
+                return int(i)
 
-
-
-#     from itertools import izip
-# import Image
-#
-# i1 = Image.open("image1.jpg")
-# i2 = Image.open("image2.jpg")
-# assert i1.mode == i2.mode, "Different kinds of images."
-# assert i1.size == i2.size, "Different sizes."
-#
-#
