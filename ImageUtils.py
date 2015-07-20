@@ -47,7 +47,7 @@ class ImageUtils:
         # newImage= ImageChops.offset(im2,offset[0], offset[1])
         inverted =self.invertGrayScaleImage(im1)
         sumOfTwo = ImageChops.add(inverted, im2)
-        print "list(sumOfTwo.getcolors())", list(sumOfTwo.getcolors())
+
         if len(list(sumOfTwo.getcolors()))>1:
             if list(sumOfTwo.getcolors())[0][1] ==0:
 
@@ -68,3 +68,23 @@ class ImageUtils:
                     inverted.putpixel((x, y), 0)
 
         return inverted
+
+    def __compareImages(self, img1, img2):
+        common = Image.new("1", img1.size, "white")
+
+        delta = Image.new("1", img1.size, "white")
+        for x in range(0, common.size[1]):
+            for y in range(0, common.size[0]):
+                p1 = img1.getpixel((x, y))
+                p2 = img2.getpixel((x, y))
+                if (p1 == 0 and p2 == 0):
+                    common.putpixel((x, y), 0)
+
+                elif p1 == 255 and p2 == 255:
+                    common.putpixel((x, y), 255)
+
+                else:
+
+                    delta.putpixel((x, y), 0)
+
+        return common, delta

@@ -65,7 +65,7 @@ class Agent:
         strategy = self.chooseStrategy(problem_figures)
         print strategy
         # DEBUG ***********************************************
-        if problem.name == 'Basic Problem D-05':  # or problem.name == 'Basic Problem D-04':
+        if problem.name == 'Basic Problem E-07':  # or problem.name == 'Basic Problem D-04':
 
             figures_a_ = problem_figures['A']
             figures_b_ = problem_figures['B']
@@ -82,36 +82,12 @@ class Agent:
             figures_7_ = problem_figures['7']
             imageUtils =ImageUtils()
 
-            print self.imageUtils.isEqual(figures_g_, figures_4_)
-            print self.imageUtils.isEqual(figures_g_, figures_3_)
-            print self.imageUtils.isEqual(figures_g_, figures_8_)
-            print self.imageUtils.isEqual(figures_g_, figures_7_)
+            difAB=self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_a_, figures_b_))
+            difDE=self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_d_, figures_e_))
 
 
+            self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_g_, figures_h_)).show()
 
-            inverted =self.imageUtils.invertGrayScaleImage(problem_figures['A'])
-            sumOfTwo = ImageChops.add(problem_figures['G'], inverted)
-
-            inverted.show()
-            sumOfTwo.show()
-
-            # inverted.show()
-
-
-
-
-
-            # rowAB= ImageChops.multiply(figures_a_, figures_d_)
-            # rowCAB= ImageChops.multiply(rowAB, figures_g_)
-            #
-            #
-            # rowDE= ImageChops.multiply(figures_b_, figures_e_)
-            # rowDEF= ImageChops.multiply(rowDE, figures_h_)
-            #
-            # rowCAB.show()
-            # rowDEF.show()
-            #
-            # print self.areEqual(rowCAB, rowDEF)
 
 
 
@@ -128,6 +104,14 @@ class Agent:
             return self.applyOneCancelsStrategy(problem_figures)
         elif strategy == 'cancel_out':
             return self.applyCancelOutStrategy(problem_figures)
+        elif strategy == 'common_perms':
+            return self.applyCommonPermsStrategy(problem_figures)
+        elif strategy == 'productAB':
+            return self.applyProductABStrategy(problem_figures)
+        elif strategy == 'productAC':
+            return self.applyProductACStrategy(problem_figures)
+        elif strategy == 'diffAB':
+            return self.applyDiffABStrategy(problem_figures)
         else:
             return self.pick_the_one_not_seen(problem_figures)
 
@@ -198,6 +182,18 @@ class Agent:
         colBE =ImageChops.multiply(figures_b_, figures_e_)
         colBEH= ImageChops.multiply(colBE, figures_h_)
 
+        #common permutations
+        ab = ImageChops.multiply(figures_a_,figures_b_)
+        ac = ImageChops.multiply(figures_a_,figures_c_)
+        df = ImageChops.multiply(figures_d_,figures_f_)
+        abc = ImageChops.multiply(ab,figures_c_)
+        de = ImageChops.multiply(figures_d_,figures_e_)
+        de_F=ImageChops.multiply(de,figures_f_)
+
+        #difs
+        difAB=self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_a_, figures_b_))
+        difDE=self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_d_, figures_e_))
+
         if self.areEqual(figures_a_, figures_b_)[0] and self.areEqual(figures_b_, figures_c_)[0]:
             if self.areEqual(figures_d_, figures_e_)[0] and self.areEqual(figures_e_, figures_f_)[0]:
                 return 'row_equals'
@@ -208,9 +204,17 @@ class Agent:
             return 'one_of_each'
         elif self.areEqual(rowAB, rowBC)[0] and self.areEqual(rowDE, rowEF)[0]:
             return "one_cancels"
-
         elif self.areEqual(colADG, colBEH)[0]:
             return "cancel_out"
+        elif self.areEqual(ab, figures_c_)[0] and self.areEqual(de, figures_f_)[0] :
+            return "productAB"
+        elif self.areEqual(ac, figures_b_)[0] and self.areEqual(df, figures_e_)[0]:
+            return "productAC"
+        elif self.areEqual(difAB, figures_c_)[0] and self.areEqual(difDE, figures_f_)[0]:
+            return "diffAB"
+        elif self.areEqual(abc, de_F)[0]:
+            return "common_perms"
+
 
 
 
@@ -263,25 +267,42 @@ class Agent:
 
         return -1;
 
-    def __compareImages(self, img1, img2):
-        common = Image.new("1", img1.size, "white")
 
-        delta = Image.new("1", img1.size, "white")
-        for x in range(0, common.size[1]):
-            for y in range(0, common.size[0]):
-                p1 = img1.getpixel((x, y))
-                p2 = img2.getpixel((x, y))
-                if (p1 == 0 and p2 == 0):
-                    common.putpixel((x, y), 0)
+    def applyCommonPermsStrategy(self, figures):
+        de = ImageChops.multiply(figures["D"],figures["E"])
+        gh = ImageChops.multiply(figures["G"],figures["H"])
+        de_F=ImageChops.multiply(de,figures["F"])
 
-                elif p1 == 255 and p2 == 255:
-                    common.putpixel((x, y), 255)
 
-                else:
 
-                    delta.putpixel((x, y), 0)
+        for i in range (1,9):
+            candidate= ImageChops.multiply(gh, figures[str(i)])
+            if self.areEqual(candidate,de_F)[0]:
+                return i
+        return self.pick_the_one_not_seen(figures)
 
-        return common, delta
+    def applyProductABStrategy(self, figures):
+        gh = ImageChops.multiply(figures["G"],figures["H"])
+        for i in range (1,9):
+           if self.areEqual(gh,figures[str(i)])[0]:
+                return i
+        return self.pick_the_one_not_seen(figures)
+
+
+    def applyProductACStrategy(self, figures):
+        for i in range (1,9):
+            candidate= ImageChops.multiply(figures["G"], figures[str(i)])
+            if self.areEqual(candidate,figures["H"])[0]:
+                return i
+        return self.pick_the_one_not_seen(figures)
+
+    def applyDiffABStrategy(self, figures):
+        difGH=self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures["H"], figures["G"]))
+        for i in range (1,9):
+            if self.areEqual(figures[str(i)],difGH)[0]:
+                return i
+        return self.pick_the_one_not_seen(figures)
+
 
 
 
@@ -289,14 +310,9 @@ class Agent:
         figs =["A","B","C","D","E","F","G", "H"]
         answers=[1,2,3,4,5,6,7,8]
         for fig in figs:
-            print fig
             for i in range(1,9):
-                print i
-                #
                 if self.areEqual(figures[fig], figures[str(i)])[0] :
-                    print "answer:",answers
                     if i in answers:
-                        print ("removing", i)
                         answers.remove(i)
 
         print(answers)
