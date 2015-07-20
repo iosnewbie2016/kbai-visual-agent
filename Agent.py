@@ -48,10 +48,14 @@ class Agent:
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
     imageUtils =ImageUtils()
+    doNotGuess= 0
     def Solve(self, problem):
 
         # TODO: Implement voting
         print "problem name: " + problem.name
+
+        if "Basic" not in problem.name:
+            self.doNotGuess =1
         # print "problem type: " + problem.problemType
         problem_figures = {}
 
@@ -63,42 +67,13 @@ class Agent:
 
             problem_figures[figureName] = image
         strategy = self.chooseStrategy(problem_figures)
-        print strategy
-        # DEBUG ***********************************************
-        if problem.name == 'Basic Problem E-07':  # or problem.name == 'Basic Problem D-04':
 
-            figures_a_ = problem_figures['A']
-            figures_b_ = problem_figures['B']
-            figures_c_ = problem_figures['C']
-            figures_d_ = problem_figures['D']
-            figures_e_ = problem_figures['E']
-            figures_f_ = problem_figures['F']
-            figures_g_ = problem_figures['G']
-            figures_h_ = problem_figures['H']
-            figures_1_ = problem_figures['1']
-            figures_3_ = problem_figures['3']
-            figures_4_ = problem_figures['4']
-            figures_8_ = problem_figures['8']
-            figures_7_ = problem_figures['7']
-            imageUtils =ImageUtils()
-
-            difAB=self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_a_, figures_b_))
-            difDE=self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_d_, figures_e_))
-
-
-            self.imageUtils.invertGrayScaleImage(ImageChops.difference(figures_g_, figures_h_)).show()
-
-
-
-
-
-        #########**************************************
         if strategy == 'row_equals':
             for i in range(1, 9):
                 if self.areEqual(problem_figures['H'], problem_figures[str(i)])[0]:
                     print ("answer", int(i))
                     return int(i)
-        elif self.chooseStrategy(problem_figures) == 'one_of_each':
+        elif strategy == 'one_of_each':
             return self.applyOnfOfEachStrategy(problem_figures)
         elif strategy == 'one_cancels':
             return self.applyOneCancelsStrategy(problem_figures)
@@ -112,6 +87,8 @@ class Agent:
             return self.applyProductACStrategy(problem_figures)
         elif strategy == 'diffAB':
             return self.applyDiffABStrategy(problem_figures)
+        elif strategy == 'shared':
+            return self.applySharedStrategy(problem_figures)
         else:
             return self.pick_the_one_not_seen(problem_figures)
 
@@ -155,7 +132,21 @@ class Agent:
         stats = {"dist": dist, "blk": abs(black[0] - black1[0])}
 
 
-        return (dist<1.1 and abs(black[0]-black1[0])<100 and abs(white[0]-white1[0]<100)), stats
+        return (dist<1.1 and abs(black[0]-black1[0])<105), stats
+        # return (dist<1.1 and abs(black[0]-black1[0])<105 and abs(white[0]-white1[0]<100)), stats
+
+    def isShared(self, figures):
+        sharedAB=self.imageUtils.compareImages(figures["A"], figures["B"])[0]
+        sharedDE=self.imageUtils.compareImages(figures["D"], figures["E"])[0]
+        return self.areEqual(sharedAB, figures["C"])[0] and self.areEqual(sharedDE, figures["F"])[0]
+
+    def applySharedStrategy(self, figures):
+        sharedGE=self.imageUtils.compareImages(figures["G"], figures["H"])[0]
+        for i in range(1, 9):
+            if self.areEqual(sharedGE, figures[str(i)])[0]:
+                return int(i)
+        else:
+            return -1
 
 
     def chooseStrategy(self, figures):
@@ -212,6 +203,8 @@ class Agent:
             return "productAC"
         elif self.areEqual(difAB, figures_c_)[0] and self.areEqual(difDE, figures_f_)[0]:
             return "diffAB"
+        elif self.isShared(figures):
+            return "shared"
         elif self.areEqual(abc, de_F)[0]:
             return "common_perms"
 
@@ -260,7 +253,10 @@ class Agent:
 
         print answers, len(answers)
         if len(answers)!=1:
-            return self.pick_the_one_not_seen(problem_figures)
+            if self.isShared(problem_figures):
+                return self.applySharedStrategy(problem_figures)
+            else:
+                return self.pick_the_one_not_seen(problem_figures)
         else:
             return answers.keys()[0]
 
@@ -316,10 +312,12 @@ class Agent:
                         answers.remove(i)
 
         print(answers)
-        if len(answers)>0:
+
+        if len(answers)==1:
             return answers[0]
-        else:
+        elif self.doNotGuess:
             return -1
+        return answers[0]
 
     def applyCancelOutStrategy(self,problem_figures):
          figures_a_ = problem_figures['A']
@@ -347,40 +345,3 @@ class Agent:
 
          return -1
 
-    def paint_edge(im, thickness, value=0):
-        new = im.copy()
-        x_max, y_max, x_mid, y_mid = new.size[0], new.size[1], new.size[0] // 2, new.size[1] // 2
-        count = 0
-
-        ranges = (
-            (range(x_mid),        range(y_mid+1)),
-            (range(x_mid),        range(y_max-1, y_mid, -1)),
-            (range(x_mid, x_max), range(y_mid+1)),
-            (range(x_mid, x_max), range(y_max-1, y_mid, -1)),
-        )
-        for r1, r2 in ranges:
-            for x in r1:
-                started = False
-                for y in r2:
-                    pix = new.getpixel((x, y))
-                    if pix == 255 and not started:
-                        count = 0
-                        continue
-                    if count < thickness:
-                        count += 1
-                        new.putpixel((x,y), value)
-                        started = True
-
-        for r1, r2 in ranges:
-            for y in r1:
-                started = False
-                for x in r2:
-                    pix = new.getpixel((x, y))
-                    if pix == 255 and not started:
-                        count = 0
-                        continue
-                    if count < thickness:
-                        count += 1
-                        new.putpixel((x,y), value)
-                        started = True
-        return new

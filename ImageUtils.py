@@ -69,7 +69,7 @@ class ImageUtils:
 
         return inverted
 
-    def __compareImages(self, img1, img2):
+    def compareImages(self, img1, img2):
         common = Image.new("1", img1.size, "white")
 
         delta = Image.new("1", img1.size, "white")
