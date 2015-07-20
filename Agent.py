@@ -10,6 +10,7 @@
 
 # Install Pillow and uncomment this line to access image processing.
 from PIL import Image, ImageChops, ImageMath, ImageOps, ImageStat, ImageFilter
+from ImageUtils import ImageUtils
 import math, operator
 from itertools import izip
 
@@ -46,6 +47,7 @@ class Agent:
     #
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
+    imageUtils =ImageUtils()
     def Solve(self, problem):
 
         # TODO: Implement voting
@@ -60,9 +62,10 @@ class Agent:
             image = Image.open(figure.visualFilename).convert('1')
 
             problem_figures[figureName] = image
-        print self.chooseStrategy(problem_figures)
+        strategy = self.chooseStrategy(problem_figures)
+        print strategy
         # DEBUG ***********************************************
-        if problem.name == 'Basic Problem D-06':  # or problem.name == 'Basic Problem D-04':
+        if problem.name == 'Basic Problem D-05':  # or problem.name == 'Basic Problem D-04':
 
             figures_a_ = problem_figures['A']
             figures_b_ = problem_figures['B']
@@ -72,39 +75,61 @@ class Agent:
             figures_f_ = problem_figures['F']
             figures_g_ = problem_figures['G']
             figures_h_ = problem_figures['H']
+            figures_1_ = problem_figures['1']
+            figures_3_ = problem_figures['3']
+            figures_4_ = problem_figures['4']
+            figures_8_ = problem_figures['8']
+            figures_7_ = problem_figures['7']
+            imageUtils =ImageUtils()
+
+            print self.imageUtils.isEqual(figures_g_, figures_4_)
+            print self.imageUtils.isEqual(figures_g_, figures_3_)
+            print self.imageUtils.isEqual(figures_g_, figures_8_)
+            print self.imageUtils.isEqual(figures_g_, figures_7_)
 
 
-            rowAB= ImageChops.subtract(figures_a_, figures_b_)
-            rowCAB= ImageChops.subtract(rowAB, figures_c_)
+            print boo
+            # inverted.show()
 
 
-            rowDE= ImageChops.subtract(figures_d_, figures_e_)
-            rowDEF= ImageChops.subtract(rowDE, figures_f_)
 
-            rowCAB.show()
-            rowDEF.show()
+
+
+            # rowAB= ImageChops.multiply(figures_a_, figures_d_)
+            # rowCAB= ImageChops.multiply(rowAB, figures_g_)
+            #
+            #
+            # rowDE= ImageChops.multiply(figures_b_, figures_e_)
+            # rowDEF= ImageChops.multiply(rowDE, figures_h_)
+            #
+            # rowCAB.show()
+            # rowDEF.show()
+            # 
+            # print self.areEqual(rowCAB, rowDEF)
 
 
 
 
         #########**************************************
-        if self.chooseStrategy(problem_figures) == 'row_equals':
+        if strategy == 'row_equals':
             for i in range(1, 9):
                 if self.areEqual(problem_figures['H'], problem_figures[str(i)])[0]:
                     print ("answer", int(i))
                     return int(i)
         elif self.chooseStrategy(problem_figures) == 'one_of_each':
             return self.applyOnfOfEachStrategy(problem_figures)
-        elif self.chooseStrategy(problem_figures) == 'one_cancels':
-
+        elif strategy == 'one_cancels':
             return self.applyOneCancelsStrategy(problem_figures)
+        elif strategy == 'cancel_out':
+            return self.applyCancelOutStrategy(problem_figures)
 
         print ("dunno why?")
         return -1
 
-    @staticmethod
-    def areEqual(im1, im2):
+
+    def areEqual(self, im1, im2):
         dif = sum(abs(p1 - p2) for p1, p2 in zip(im1.getdata(), im2.getdata()))
+
         ncomponents = im1.size[0] * im1.size[1] * 3
         dist = (dif / 255.0 * 100) / ncomponents
         im1__getcolors = im1.getcolors()
@@ -131,10 +156,12 @@ class Agent:
                 black1 = im2_getcolors
                 white1 = (0, 255)
 
-        stats = {"dist": dist, "blk": abs(black[0] - black1[0]),"white": 0}
 
 
-        return (dist < 1.1 and abs(black[0] - black1[0]) < 200 and abs(white[0] - white1[0] < 200)), stats
+        stats = {"dist": dist, "blk": abs(black[0] - black1[0])}
+        #
+        #
+        return self.imageUtils.isEqual(im1, im2), stats
 
     def chooseStrategy(self, figures):
         # everyone is the same
@@ -145,6 +172,7 @@ class Agent:
         figures_e_ = figures['E']
         figures_f_ = figures['F']
         figures_g_ = figures['G']
+        figures_h_ = figures['H']
 
         # overlays
         rowAB = ImageChops.add(figures_a_, figures_b_)
@@ -152,42 +180,48 @@ class Agent:
         rowDE = ImageChops.add(figures_d_, figures_e_)
         rowEF = ImageChops.add(figures_e_, figures_f_)
 
+
+        colAD =ImageChops.multiply(figures_a_, figures_d_)
+        colADG= ImageChops.multiply(colAD, figures_g_)
+
+        colBE =ImageChops.multiply(figures_b_, figures_e_)
+        colBEH= ImageChops.multiply(colBE, figures_h_)
+
         if self.areEqual(figures_a_, figures_b_)[0] and self.areEqual(figures_b_, figures_c_)[0]:
             if self.areEqual(figures_d_, figures_e_)[0] and self.areEqual(figures_e_, figures_f_)[0]:
                 return 'row_equals'
-        elif self.areEqual(figures_a_, figures_d_)[0] or self.areEqual(figures_a_, figures_e_)[0] or \
-                self.areEqual(figures_a_,
-                              figures_f_)[0]:
-            if self.areEqual(figures_b_, figures_d_)[0] or self.areEqual(figures_b_, figures_e_) or self.areEqual(
-                    figures_b_, figures_f_)[0]:
-                return 'one_of_each'
+        elif ((self.areEqual(figures_a_, figures_d_)[0] or self.areEqual(figures_a_, figures_e_)[0] or self.areEqual(figures_a_,figures_f_)[0]) \
+                and (self.areEqual(figures_b_, figures_d_)[0] or self.areEqual(figures_b_, figures_e_)[0] or self.areEqual(figures_b_, figures_f_)[0]) \
+                and (self.areEqual(figures_c_, figures_d_)[0] or self.areEqual(figures_c_, figures_e_)[0] or self.areEqual(figures_c_, figures_f_)[0])):
+            print "I should not be here"
+            return 'one_of_each'
         elif self.areEqual(rowAB, rowBC)[0] and self.areEqual(rowDE, rowEF)[0]:
             return "one_cancels"
 
+        elif self.areEqual(colADG, colBEH)[0]:
+            return "cancel_out"
+
 
     def applyOnfOfEachStrategy(self, problem_figures):
-        if self.areEqual(problem_figures['A'], problem_figures['G'])[0] or self.areEqual(problem_figures['A'],
-                                                                                         problem_figures['H'])[0]:
-            if self.areEqual(problem_figures['B'], problem_figures['G'])[0] or self.areEqual(problem_figures['B'],
-                                                                                             problem_figures['H'][0]):
-                if self.areEqual(problem_figures['C'], problem_figures['G'])[0] or self.areEqual(problem_figures['C'],
-                                                                                                 problem_figures['H'])[
-                    0]:
+        if self.areEqual(problem_figures['A'], problem_figures['G'])[0] or self.areEqual(problem_figures['A'],problem_figures['H'])[0]:
+            if self.areEqual(problem_figures['B'], problem_figures['G'])[0] or self.areEqual(problem_figures['B'],problem_figures['H'][0]):
+                if self.areEqual(problem_figures['C'], problem_figures['G'])[0] or self.areEqual(problem_figures['C'],problem_figures['H'])[0]:
                     print  "need to chose another strategy"
                 else:
                     print "missing C"
-                    missing_figure = problem_figures['C']
+                    missing_figure ='C'
             else:
                 print "missing B"
-                missing_figure = problem_figures['B']
+                missing_figure ='B'
         else:
-            missing_figure = problem_figures['A']
+            print "missing A"
+            missing_figure = "A"
 
         for i in range(1, 9):
             print 'A &', i
-            if self.areEqual(missing_figure, problem_figures[str(i)])[0]:
+            print self.areEqual(problem_figures[missing_figure], problem_figures[str(i)])
+            if self.areEqual(problem_figures[missing_figure], problem_figures[str(i)])[0]:
                 print ("found answer", i)
-
                 return int(i)
 
     def applyOneCancelsStrategy(self, problem_figures):
@@ -202,15 +236,12 @@ class Agent:
             candidate2 = ImageChops.add(rowGH, problem_figures[str(i)])
 
             if self.areEqual(rowCF, candidate)[0] and self.areEqual(rowGH, candidate2)[0]:
-                print ("answer", int(i))
+               
                 answers[i]= problem_figures[str(i)]
 
         print answers, len(answers)
         if len(answers)!=1:
-            for i in range(1, 9):
-                print "try one more:", i
-                if self.areEqual(rowHF, problem_figures[str(i)])[0] :
-                    return int(i)
+            return self.pick_the_one_not_seen(problem_figures)
         else:
             return answers.keys()[0]
 
@@ -237,18 +268,51 @@ class Agent:
 
         return common, delta
 
-    def invertGrayScaleImage(self, image):
-        inverted = Image.new("1", image.size, "white")
-        for x in range(0, image.size[1]):
-            for y in range(0, image.size[0]):
-                p1 = image.getpixel((x, y))
-                if (p1 == 0):
-                    inverted.putpixel((x, y), 255)
-                else:
-                    inverted.putpixel((x, y), 0)
 
-        return inverted
 
+    def pick_the_one_not_seen(self, figures):
+        figs =["A","B","C","D","E","F","G", "H"]
+        answers=[1,2,3,4,5,6,7,8]
+        for fig in figs:
+            print fig
+            for i in range(1,9):
+                print i
+                #
+                if self.areEqual(candidate, figures[str(i)])[0] :
+                    print "answer:",answers
+                    if i in answers:
+                        print ("removing", i)
+
+                        answers.remove(i)
+
+        print(answers)
+        return answers[0]
+
+    def applyCancelOutStrategy(self,problem_figures):
+         figures_a_ = problem_figures['A']
+         figures_b_ = problem_figures['B']
+         figures_c_ = problem_figures['C']
+         figures_d_ = problem_figures['D']
+         figures_e_ = problem_figures['E']
+         figures_f_ = problem_figures['F']
+         figures_g_ = problem_figures['G']
+
+         figures_h_ = problem_figures['H']
+
+         colAD= ImageChops.multiply(figures_a_, figures_d_)
+         colADG= ImageChops.multiply(colAD, figures_g_)
+         colCF= ImageChops.multiply(figures_c_, figures_f_)
+
+         for i in range(1, 9):
+             print i
+             candidate = ImageChops.multiply(colCF, problem_figures[str(i)])
+             if self.areEqual(candidate,colADG)[0]:
+                 return int(i)
+
+         # if len(self.pick_the_one_not_seen(problem_figures))==1:
+         #     return self.pick_the_one_not_seen(problem_figures)[0]
+
+         return -1
 
     def paint_edge(im, thickness, value=0):
         new = im.copy()
