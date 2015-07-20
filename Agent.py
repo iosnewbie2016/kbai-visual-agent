@@ -56,10 +56,9 @@ class Agent:
 
         if "Basic" not in problem.name:
             self.doNotGuess =1
-        # print "problem type: " + problem.problemType
         problem_figures = {}
 
-        STRATEGIES = []
+
 
         for figureName in problem.figures:
             figure = problem.figures[figureName]
@@ -71,8 +70,7 @@ class Agent:
         if strategy == 'row_equals':
             for i in range(1, 9):
                 if self.areEqual(problem_figures['H'], problem_figures[str(i)])[0]:
-                    print ("answer", int(i))
-                    return int(i)
+                   return int(i)
         elif strategy == 'one_of_each':
             return self.applyOnfOfEachStrategy(problem_figures)
         elif strategy == 'one_cancels':
@@ -92,8 +90,6 @@ class Agent:
         else:
             return self.pick_the_one_not_seen(problem_figures)
 
-
-        print ("dunno why?")
         return -1
 
 
@@ -191,7 +187,7 @@ class Agent:
         elif ((self.areEqual(figures_a_, figures_d_)[0] or self.areEqual(figures_a_, figures_e_)[0] or self.areEqual(figures_a_,figures_f_)[0]) \
                 and (self.areEqual(figures_b_, figures_d_)[0] or self.areEqual(figures_b_, figures_e_)[0] or self.areEqual(figures_b_, figures_f_)[0]) \
                 and (self.areEqual(figures_c_, figures_d_)[0] or self.areEqual(figures_c_, figures_e_)[0] or self.areEqual(figures_c_, figures_f_)[0])):
-            print "I should not be here"
+
             return 'one_of_each'
         elif self.areEqual(rowAB, rowBC)[0] and self.areEqual(rowDE, rowEF)[0]:
             return "one_cancels"
@@ -217,23 +213,14 @@ class Agent:
                 if self.areEqual(problem_figures['C'], problem_figures['G'])[0] or self.areEqual(problem_figures['C'],problem_figures['H'])[0]:
                     print  "need to chose another strategy"
                 else:
-                    miss ="c"
-                    print "missing C"
                     missing_figure ='C'
             else:
-                print "missing B"
-                miss ="b"
                 missing_figure ='B'
         else:
-            print "missing A"
-            miss ="a"
             missing_figure = "A"
 
         for i in range(1, 9):
-            print 'A &', i
-            print self.areEqual(problem_figures[missing_figure], problem_figures[str(i)])
             if self.areEqual(problem_figures[missing_figure], problem_figures[str(i)])[0]:
-                print ("found answer", i)
                 return int(i)
 
     def applyOneCancelsStrategy(self, problem_figures):
@@ -243,7 +230,6 @@ class Agent:
         answers ={}
 
         for i in range(1, 9):
-            print i
             candidate = ImageChops.add(rowCF, problem_figures[str(i)])
             candidate2 = ImageChops.add(rowGH, problem_figures[str(i)])
 
@@ -251,7 +237,6 @@ class Agent:
 
                 answers[i]= problem_figures[str(i)]
 
-        print answers, len(answers)
         if len(answers)!=1:
             if self.isShared(problem_figures):
                 return self.applySharedStrategy(problem_figures)
@@ -311,8 +296,6 @@ class Agent:
                     if i in answers:
                         answers.remove(i)
 
-        print(answers)
-
         if len(answers)==1:
             return answers[0]
         elif self.doNotGuess:
@@ -321,27 +304,20 @@ class Agent:
 
     def applyCancelOutStrategy(self,problem_figures):
          figures_a_ = problem_figures['A']
-         figures_b_ = problem_figures['B']
          figures_c_ = problem_figures['C']
          figures_d_ = problem_figures['D']
-         figures_e_ = problem_figures['E']
          figures_f_ = problem_figures['F']
          figures_g_ = problem_figures['G']
-
-         figures_h_ = problem_figures['H']
 
          colAD= ImageChops.multiply(figures_a_, figures_d_)
          colADG= ImageChops.multiply(colAD, figures_g_)
          colCF= ImageChops.multiply(figures_c_, figures_f_)
 
          for i in range(1, 9):
-             print i
              candidate = ImageChops.multiply(colCF, problem_figures[str(i)])
              if self.areEqual(candidate,colADG)[0]:
                  return int(i)
 
-         # if len(self.pick_the_one_not_seen(problem_figures))==1:
-         #     return self.pick_the_one_not_seen(problem_figures)[0]
 
          return -1
 
