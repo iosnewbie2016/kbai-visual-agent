@@ -128,6 +128,9 @@ class Agent:
             return self.applyOneCancelsStrategy(problem_figures)
         elif strategy == 'cancel_out':
             return self.applyCancelOutStrategy(problem_figures)
+        else:
+            return self.pick_the_one_not_seen(problem_figures)
+
 
         print ("dunno why?")
         return -1
@@ -208,6 +211,7 @@ class Agent:
 
         elif self.areEqual(colADG, colBEH)[0]:
             return "cancel_out"
+
 
 
     def applyOnfOfEachStrategy(self, problem_figures):
@@ -293,11 +297,13 @@ class Agent:
                     print "answer:",answers
                     if i in answers:
                         print ("removing", i)
-
                         answers.remove(i)
 
         print(answers)
-        return answers[0]
+        if len(answers)>0:
+            return answers[0]
+        else:
+            return -1
 
     def applyCancelOutStrategy(self,problem_figures):
          figures_a_ = problem_figures['A']
