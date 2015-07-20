@@ -43,13 +43,14 @@ class ImageUtils:
             return ImageChops.difference(im1, ImageChops.offset(im2,offset[0], offset[1]))
 
     def isEqual(self, im1, im2):
-        offset =self.findOffset(im1, im2)
-        newImage= ImageChops.offset(im2,offset[0], offset[1])
-        inverted =self.invertGrayScaleImage(newImage)
-        sumOfTwo = ImageChops.add(inverted, im1)
-        print list(sumOfTwo.getcolors())
+        # offset =self.findOffset(im1, im2)
+        # newImage= ImageChops.offset(im2,offset[0], offset[1])
+        inverted =self.invertGrayScaleImage(im1)
+        sumOfTwo = ImageChops.add(inverted, im2)
+        print "list(sumOfTwo.getcolors())", list(sumOfTwo.getcolors())
         if len(list(sumOfTwo.getcolors()))>1:
             if list(sumOfTwo.getcolors())[0][1] ==0:
+
                 return list(sumOfTwo.getcolors())[0][0]<155
             elif list(sumOfTwo.getcolors())[1][1] ==0:
                 return list(sumOfTwo.getcolors())[1][0]<155

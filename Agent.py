@@ -88,7 +88,13 @@ class Agent:
             print self.imageUtils.isEqual(figures_g_, figures_7_)
 
 
-            print boo
+
+            inverted =self.imageUtils.invertGrayScaleImage(problem_figures['A'])
+            sumOfTwo = ImageChops.add(problem_figures['G'], inverted)
+
+            inverted.show()
+            sumOfTwo.show()
+
             # inverted.show()
 
 
@@ -104,7 +110,7 @@ class Agent:
             #
             # rowCAB.show()
             # rowDEF.show()
-            # 
+            #
             # print self.areEqual(rowCAB, rowDEF)
 
 
@@ -127,7 +133,8 @@ class Agent:
         return -1
 
 
-    def areEqual(self, im1, im2):
+    @staticmethod
+    def areEqual(im1, im2):
         dif = sum(abs(p1 - p2) for p1, p2 in zip(im1.getdata(), im2.getdata()))
 
         ncomponents = im1.size[0] * im1.size[1] * 3
@@ -159,9 +166,10 @@ class Agent:
 
 
         stats = {"dist": dist, "blk": abs(black[0] - black1[0])}
-        #
-        #
-        return self.imageUtils.isEqual(im1, im2), stats
+
+
+        return (dist<1.1 and abs(black[0]-black1[0])<100 and abs(white[0]-white1[0]<100)), stats
+
 
     def chooseStrategy(self, figures):
         # everyone is the same
@@ -208,13 +216,16 @@ class Agent:
                 if self.areEqual(problem_figures['C'], problem_figures['G'])[0] or self.areEqual(problem_figures['C'],problem_figures['H'])[0]:
                     print  "need to chose another strategy"
                 else:
+                    miss ="c"
                     print "missing C"
                     missing_figure ='C'
             else:
                 print "missing B"
+                miss ="b"
                 missing_figure ='B'
         else:
             print "missing A"
+            miss ="a"
             missing_figure = "A"
 
         for i in range(1, 9):
@@ -236,7 +247,7 @@ class Agent:
             candidate2 = ImageChops.add(rowGH, problem_figures[str(i)])
 
             if self.areEqual(rowCF, candidate)[0] and self.areEqual(rowGH, candidate2)[0]:
-               
+
                 answers[i]= problem_figures[str(i)]
 
         print answers, len(answers)
@@ -278,7 +289,7 @@ class Agent:
             for i in range(1,9):
                 print i
                 #
-                if self.areEqual(candidate, figures[str(i)])[0] :
+                if self.areEqual(figures[fig], figures[str(i)])[0] :
                     print "answer:",answers
                     if i in answers:
                         print ("removing", i)
